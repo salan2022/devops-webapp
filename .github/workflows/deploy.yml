@@ -9,14 +9,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Connect and deploy
+      - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           script: |
+            set -e
+
+            echo "➡️ Going to project folder"
             cd ~/devops-webapp
+
+            echo "➡️ Pull latest code"
             git pull origin main
-            docker-compose down
+
+            echo "➡️ Restarting containers"
+            docker-compose down || true
             docker-compose up -d
+
+            echo "✅ Deployment complete"
