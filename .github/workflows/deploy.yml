@@ -1,21 +1,37 @@
-script: |
-  set -e
+name: Deploy to EC2
 
-  echo "➡️ Go to home"
-  cd ~
+on:
+  push:
+    branches: ["main"]
 
-  echo "➡️ Ensure project exists"
-  if [ ! -d "devops-webapp" ]; then
-    git clone https://github.com/salan2022/devops-webapp.git
-  fi
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-  cd devops-webapp
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: vboxuser
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            set -e
 
-  echo "➡️ Update code"
-  git pull origin main
+            echo "➡️ Go home"
+            cd ~
 
-  echo "➡️ Restart Docker"
-  docker-compose down || true
-  docker-compose up -d
+            echo "➡️ Clone or update repo"
+            if [ ! -d "devops-webapp" ]; then
+              git clone https://github.com/salan2022/devops-webapp.git
+            fi
 
-  echo "✅ Deployment successful"
+            cd devops-webapp
+
+            git pull origin main
+
+            echo "➡️ Restart Docker"
+            docker-compose down || true
+            docker-compose up -d
+
+            echo "✅ Deployment done"
